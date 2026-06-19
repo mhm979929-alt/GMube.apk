@@ -3,64 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GMube Edu</title>
+    <title>GMube Edu - تحميل التطبيق</title>
+    <!-- إضافة مكتبة Supabase من الإنترنت -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-        .container { background: #1e1e1e; padding: 40px; border-radius: 20px; max-width: 400px; width: 90%; }
-        h1 { color: #4CAF50; }
-        .download-btn { background-color: #4CAF50; color: white; padding: 15px 30px; border-radius: 30px; font-weight: bold; display: inline-block; margin-bottom: 20px; cursor: pointer; text-decoration: none;}
+        .container { background: #1e1e1e; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }
+        h1 { color: #4CAF50; margin-bottom: 10px; }
+        .subtitle { color: #b0b0b0; margin-bottom: 30px; }
+        .download-btn { background-color: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; margin-bottom: 20px; transition: 0.3s; cursor: pointer;}
+        .download-btn:hover { background-color: #45a049; transform: scale(1.05); }
         .counter-box { background: #2d2d2d; padding: 15px; border-radius: 10px; border: 1px solid #4CAF50; }
         .counter-number { font-size: 28px; font-weight: bold; color: #4CAF50; }
+        .counter-label { font-size: 14px; color: #888; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h1>GMube Edu</h1>
-        <p style="color: #b0b0b0;">نافذة الطلاب والمعلمين</p>
+        <p class="subtitle">نافذة الطلاب والمعلمين، تعلّم بذكاء.</p>
         
-        <!-- ضع رابط ملف APK الخاص بك هنا بدلاً من # -->
-        <a href="#" class="download-btn" onclick="triggerDownload()">📥 تحميل التطبيق</a>
+        <!-- ضع رابط تحميل APK الخاص بك في href -->
+        <a href="#" class="download-btn" onclick="triggerDownload()">📥 تحميل التطبيق الآن</a>
         
         <div class="counter-box">
             <div class="counter-number" id="downloadCount">جاري التحميل...</div>
-            <div class="counter-label">إجمالي التحميلات</div>
+            <div class="counter-label">إجمالي مرات التحميل</div>
         </div>
     </div>
 
     <script>
-        // ⚠️ خطوة مهمة جداً: استبدل "اسم_مستخدمك" و "اسم_المستودع" بمعلومات حسابك
-        const REPO_OWNER = "mhm979929-alt";
-        const REPO_NAME = "GMube.apk";
-        const JSON_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/counter.json`;
+        // ⚠️ ضع مفاتيح Supabase الخاصة بك هنا:
+        const SUPABASE_URL = "https://rmtaxqowryheatrntcrs.supabase.co"
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGF4cW93cnloZWF0cm50Y3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDIzNzEsImV4cCI6MjA5NzQxODM3MX0.Ky0Vw6PnQz7R9bFQL4i-J0smkWhefK1VnueGE6i1g9M";
 
-        // دالة زيادة العداد
-        function triggerDownload() {
-            // نزيد الرقم للمستخدم في الصفحة فوراً
-            let currentNum = parseInt(document.getElementById('downloadCount').innerText);
-            if(!isNaN(currentNum)) {
-                document.getElementById('downloadCount').innerText = currentNum + 1;
+        // تهيئة الاتصال
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // دالة زيادة العداد عند الضغط
+        async function triggerDownload() {
+            // 1. نقرأ الرقم الحالي من قاعدة البيانات
+            const { data, error } = await supabase
+                .from('downloads')
+                .select('count')
+                .eq('id', 1)
+                .single();
+
+            if (error) {
+                console.error("خطأ في القراءة:", error);
+                return;
             }
 
-            // نرسل إشارة لـ GitHub Action ليزيد الرقم في ملف JSON الحقيقي
-            fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/vnd.github+json',
-                    'Authorization': 'Bearer YOUR_GITHUB_TOKEN', // سنتعامل مع هذا في الخطوة التالية
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ "event_type": "download" })
-            });
+            let currentCount = data.count;
+
+            // 2. نزيد الرقم بمقدار 1
+            let newCount = currentCount + 1;
+
+            // 3. نحدث قاعدة البيانات بالرقم الجديد
+            const { error: updateError } = await supabase
+                .from('downloads')
+                .update({ count: newCount })
+                .eq('id', 1);
+
+            if (updateError) {
+                console.error("خطأ في التحديث:", updateError);
+            } else {
+                // 4. نحدث الرقم في الشاشة
+                document.getElementById('downloadCount').innerText = newCount;
+            }
         }
 
         // دالة عرض العداد عند فتح الصفحة
         window.onload = async function() {
-            try {
-                const response = await fetch(JSON_URL);
-                const data = await response.json();
-                document.getElementById('downloadCount').innerText = data.downloads;
-            } catch {
+            const { data, error } = await supabase
+                .from('downloads')
+                .select('count')
+                .eq('id', 1)
+                .single();
+
+            if (error) {
                 document.getElementById('downloadCount').innerText = "0";
+            } else {
+                document.getElementById('downloadCount').innerText = data.count;
             }
         }
     </script>
