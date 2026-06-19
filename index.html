@@ -3,59 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GMube Edu - تحميل التطبيق</title>
+    <title>GMube Edu</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-        .container { background: #1e1e1e; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }
-        h1 { color: #4CAF50; margin-bottom: 10px; }
-        .subtitle { color: #b0b0b0; margin-bottom: 30px; }
-        .download-btn { background-color: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; margin-bottom: 20px; transition: 0.3s; cursor: pointer;}
-        .download-btn:hover { background-color: #45a049; transform: scale(1.05); }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        .container { background: #1e1e1e; padding: 40px; border-radius: 20px; max-width: 400px; width: 90%; }
+        h1 { color: #4CAF50; }
+        .download-btn { background-color: #4CAF50; color: white; padding: 15px 30px; border-radius: 30px; font-weight: bold; display: inline-block; margin-bottom: 20px; cursor: pointer; text-decoration: none;}
         .counter-box { background: #2d2d2d; padding: 15px; border-radius: 10px; border: 1px solid #4CAF50; }
         .counter-number { font-size: 28px; font-weight: bold; color: #4CAF50; }
-        .counter-label { font-size: 14px; color: #888; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>GMube Edu</h1>
-        <p class="subtitle">نافذة الطلاب والمعلمين، تعلّم بذكاء.</p>
+        <p style="color: #b0b0b0;">نافذة الطلاب والمعلمين</p>
         
-        <!-- ضع رابط ملف الـ APK الخاص بك في الـ href هنا -->
-        <a href="[ضع رابط ملف APK هنا]" class="download-btn" onclick="triggerDownload()">📥 تحميل التطبيق الآن</a>
+        <!-- ضع رابط ملف APK الخاص بك هنا بدلاً من # -->
+        <a href="#" class="download-btn" onclick="triggerDownload()">📥 تحميل التطبيق</a>
         
         <div class="counter-box">
             <div class="counter-number" id="downloadCount">جاري التحميل...</div>
-            <div class="counter-label">إجمالي مرات التحميل</div>
+            <div class="counter-label">إجمالي التحميلات</div>
         </div>
     </div>
 
     <script>
-        // هذا هو رابط ملف العداد الخاص بك (سيقوم بقراءة الرقم)
-        const JSON_URL = "https://raw.githubusercontent.com/[اسم_مستخدمك_في_جيت_هاب]/[اسم_المستودع]/main/counter.json";
-        
-        async function fetchCounter() {
-            try {
-                const response = await fetch(JSON_URL);
-                const data = await response.json();
-                document.getElementById('downloadCount').innerText = data.downloads;
-            } catch (error) {
-                document.getElementById('downloadCount').innerText = "خطأ";
-            }
-        }
+        // ⚠️ خطوة مهمة جداً: استبدل "اسم_مستخدمك" و "اسم_المستودع" بمعلومات حسابك
+        const REPO_OWNER = "mhm979929-alt";
+        const REPO_NAME = "GMube.apk";
+        const JSON_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/counter.json`;
 
+        // دالة زيادة العداد
         function triggerDownload() {
-            // نزيد العداد وهمياً للزائر فوراً ليظهر التفاعل
+            // نزيد الرقم للمستخدم في الصفحة فوراً
             let currentNum = parseInt(document.getElementById('downloadCount').innerText);
             if(!isNaN(currentNum)) {
                 document.getElementById('downloadCount').innerText = currentNum + 1;
             }
-            // لاحظ: للأسف، لا يمكن استخدام طريقة "GitHub Actions" (التي تجعل العداد يزداد في السيرفر وتظهر للجميع) 
-            // إلا بتعقيدات برمجية وتوكين أمان للغاية. 
-            // *نصيحتي لك*: لتحقيق هدفك ببساطة، سنستخدم خطوة ثالثة أسهل بكثير في الأسفل!
+
+            // نرسل إشارة لـ GitHub Action ليزيد الرقم في ملف JSON الحقيقي
+            fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': 'Bearer YOUR_GITHUB_TOKEN', // سنتعامل مع هذا في الخطوة التالية
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ "event_type": "download" })
+            });
         }
 
-        window.onload = fetchCounter;
+        // دالة عرض العداد عند فتح الصفحة
+        window.onload = async function() {
+            try {
+                const response = await fetch(JSON_URL);
+                const data = await response.json();
+                document.getElementById('downloadCount').innerText = data.downloads;
+            } catch {
+                document.getElementById('downloadCount').innerText = "0";
+            }
+        }
     </script>
 </body>
 </html>
