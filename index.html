@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GMube Edu - تحميل التطبيق</title>
-    <!-- إضافة مكتبة Supabase من الإنترنت -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
         .container { background: #1e1e1e; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }
@@ -24,8 +23,8 @@
         <h1>GMube Edu</h1>
         <p class="subtitle">نافذة الطلاب والمعلمين، تعلّم بذكاء.</p>
         
-        <!-- ضع رابط تحميل APK الخاص بك في href -->
-        <a href="#" class="download-btn" onclick="triggerDownload()">📥 تحميل التطبيق الآن</a>
+        <!-- ضع رابط ملف APK الخاص بك هنا -->
+        <a href="https://drive.google.com/your-apk-link-here.apk" class="download-btn" id="downloadBtn">📥 تحميل التطبيق الآن</a>
         
         <div class="counter-box">
             <div class="counter-number" id="downloadCount">جاري التحميل...</div>
@@ -33,59 +32,70 @@
         </div>
     </div>
 
-    <script>
-        // ⚠️ ضع مفاتيح Supabase الخاصة بك هنا:
-        const SUPABASE_URL = "https://rmtaxqowryheatrntcrs.supabase.co"
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGF4cW93cnloZWF0cm50Y3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDIzNzEsImV4cCI6MjA5NzQxODM3MX0.Ky0Vw6PnQz7R9bFQL4i-J0smkWhefK1VnueGE6i1g9M";
-
-        // تهيئة الاتصال
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // دالة زيادة العداد عند الضغط
-        async function triggerDownload() {
-            // 1. نقرأ الرقم الحالي من قاعدة البيانات
-            const { data, error } = await supabase
-                .from('downloads')
-                .select('count')
-                .eq('id', 1)
-                .single();
-
-            if (error) {
-                console.error("خطأ في القراءة:", error);
-                return;
+    <!-- استخدام طريقة Modules لضمان عدم وجود أخطاء -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
             }
+        }
+    </script>
 
-            let currentCount = data.count;
+    <script type="module">
+        // استيراد المكتبة من الرابط أعلاه
+        import { createClient } from '@supabase/supabase-js';
 
-            // 2. نزيد الرقم بمقدار 1
-            let newCount = currentCount + 1;
+        // ⚠️ ضع مفاتيح مشروعك هنا (من إعدادات > API في Supabase)
+        const SUPABASE_URL = "https://rmtaxqowryheatrntcrs.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtdGF4cW93cnloZWF0cm50Y3JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NDIzNzEsImV4cCI6MjA5NzQxODM3MX0.Ky0Vw6PnQz7R9bFQL4i-J0smkWhefK1VnueGE6i1g9M"; // يبدأ بـ eyJ...
 
-            // 3. نحدث قاعدة البيانات بالرقم الجديد
-            const { error: updateError } = await supabase
-                .from('downloads')
-                .update({ count: newCount })
-                .eq('id', 1);
+        // إنشاء الاتصال بقاعدة البيانات
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            if (updateError) {
-                console.error("خطأ في التحديث:", updateError);
-            } else {
-                // 4. نحدث الرقم في الشاشة
+        // دالة زيادة العداد عند الضغط على زر التحميل
+        window.triggerDownload = async function() {
+            try {
+                const { data, error } = await supabase
+                    .from('downloads')
+                    .select('count')
+                    .eq('id', 1)
+                    .single();
+
+                if (error) throw error;
+
+                let newCount = data.count + 1;
+                
+                const { error: updateError } = await supabase
+                    .from('downloads')
+                    .update({ count: newCount })
+                    .eq('id', 1);
+
+                if (updateError) throw updateError;
+
                 document.getElementById('downloadCount').innerText = newCount;
+                
+            } catch (err) {
+                console.error("خطأ عند التحميل:", err);
             }
         }
 
-        // دالة عرض العداد عند فتح الصفحة
+        // دالة عرض العداد عند فتح الصفحة لأول مرة
         window.onload = async function() {
-            const { data, error } = await supabase
-                .from('downloads')
-                .select('count')
-                .eq('id', 1)
-                .single();
+            try {
+                const { data, error } = await supabase
+                    .from('downloads')
+                    .select('count')
+                    .eq('id', 1)
+                    .single();
 
-            if (error) {
+                if (error) throw error;
+
+                if (data) {
+                    document.getElementById('downloadCount').innerText = data.count;
+                }
+            } catch (err) {
+                console.error("خطأ في تحميل العداد:", err);
                 document.getElementById('downloadCount').innerText = "0";
-            } else {
-                document.getElementById('downloadCount').innerText = data.count;
             }
         }
     </script>
